@@ -1,0 +1,22 @@
+{
+  "name": "magoun-status-board-ui",
+  "version": "1.0.0",
+  "description": "Magoun status board UI",
+  "main": "main.js",
+  "scripts": {
+    "serve": "http-server ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bencentra/MagounStatusBoardUI.git"
+  },
+  "author": "Ben Centra <blcentra@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bencentra/MagounStatusBoardUI/issues"
+  },
+  "homepage": "https://github.com/bencentra/MagounStatusBoardUI#readme",
+  "devDependencies": {
+    "http-server": "^0.10.0"
+  }
+}
