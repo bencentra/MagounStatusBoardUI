@@ -8,9 +8,21 @@ const ROUTES = {
 };
 
 const STOPS = {
-  alewife: 'place-alfcl',
-  magoun: '2268',
-  gladstone: '2274',
+  alewife: {
+    stop_id: 'place-alfcl',
+    mode: 'subway',
+    direction: 'southbound',
+  },
+  magoun: {
+    stop_id: '2268',
+    mode: 'bus',
+    direction: 'inbound',
+  },
+  gladstone: {
+    stop_id: '2274',
+    mode: 'bus',
+    direction: 'outbound',
+  },
 };
 
 const buildEndpoint = (endpoint, params) => {
@@ -23,38 +35,54 @@ const ENDPOINTS = {
   predictionsbystop: (stop) => buildEndpoint('predictionsbystop', [{ name: 'stop', value: stop }]),
 };
 
-async function getJSON(url) {
+async function fetchJSON(url) {
   const response = await fetch(url);
   const json = await response.json();
   return json;
 }
 
-async function getRedlineTimes() {
-  const json = await getJSON(ENDPOINTS.predictionsbystop(STOPS.alewife));
-  const subway = json.mode.filter((mode) => mode.mode_name === 'Subway');
-  if (subway.length === 0) throw new Error('no subway found');
-  const outbound = subway[0].route.reduce((prev, curr) => {
-    const southbound = curr.direction.filter((direction) => direction.direction_name === 'Southbound');
-    if (southbound.length === 1) prev.push(southbound[0]);
+async function getPredictionsByStop(stop) {
+  const json = await fetchJSON(ENDPOINTS.predictionsbystop(stop.stop_id));
+  const mode = json.mode.filter(m => m.mode_name.toLowerCase() === stop.mode);
+  if (mode.length === 0) throw new Error(`no ${stop.mode} found`);
+  const direction = mode[0].route.reduce((prev, curr) => {
+    const tmp = curr.direction.filter(d => d.direction_name.toLowerCase() === stop.direction);
+    if (tmp.length === 1) prev.push(tmp[0]);
     return prev;
   }, []);
-  if (outbound.length === 0) throw new Error('no outbound direction found');
-  const trips = outbound[0].trip;
+  if (direction.length === 0) throw new Error(`no direction ${stop.direction} found`);
+  const trips = direction[0].trip;
   if (trips.length === 0) throw new Error('no trips found');
   return trips;
 }
 
 // Do some things
-// getJSON(ENDPOINTS.stopsbyroute(ROUTES.redline)).then((json) => console.log('stopsbyroute - redline', json));
-// getJSON(ENDPOINTS.stopsbyroute(ROUTES.bus)).then((json) => console.log('stopsbyroute - bus', json));
-getJSON(ENDPOINTS.predictionsbystop(STOPS.alewife)).then((json) => console.log('predictionsbystop - alewife', json));
-// getJSON(ENDPOINTS.predictionsbystop(STOPS.magoun)).then((json) => console.log('predictionsbystop - magoun', json));
-// getJSON(ENDPOINTS.predictionsbystop(STOPS.gladstone)).then((json) => console.log('predictionsbystop - gladstone', json));
+// fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.redline)).then((json) => console.log('stopsbyroute - redline', json));
+// fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.bus)).then((json) => console.log('stopsbyroute - bus', json));
+// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.alewife.stop_id)).then((json) => console.log('predictionsbystop - alewife', json));
+// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.magoun.stop_id)).then((json) => console.log('predictionsbystop - magoun', json));
+// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.gladstone.stop_id)).then((json) => console.log('predictionsbystop - gladstone', json));
 
-getRedlineTimes()
+getPredictionsByStop(STOPS.alewife)
   .then((data) => {
     console.log(data);
   })
   .catch((error) => {
-    console.error('redline error:', error.message);
+    console.error('alewife error:', error.message);
+  });
+
+getPredictionsByStop(STOPS.magoun)
+  .then((data) => {
+    console.log(data);
+  })
+  .catch((error) => {
+    console.error('magoun error:', error.message);
+  });
+
+getPredictionsByStop(STOPS.gladstone)
+  .then((data) => {
+    console.log(data);
+  })
+  .catch((error) => {
+    console.error('gladstone error:', error.message);
   });
