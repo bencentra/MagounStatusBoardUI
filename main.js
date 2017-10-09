@@ -56,33 +56,39 @@ async function getPredictionsByStop(stop) {
   return trips;
 }
 
+function displayPredictionsList(selector, data) {
+  const section = document.querySelector(selector);
+  const list = document.createElement('ul');
+  data.forEach((time) => {
+    const item = document.createElement('li');
+    item.appendChild(document.createTextNode(time.trip_name));
+    list.appendChild(item);
+  });
+  section.innerHTML = '';
+  section.appendChild(list);
+}
+
+function displayPredictions() {
+  Object.keys(STOPS).forEach((name) => {
+    const stop = STOPS[name];
+    getPredictionsByStop(stop)
+      .then((data) => {
+        console.log(name, data);
+        displayPredictionsList(`#${name} .times`, data);
+      })
+      .catch((error) => {
+        console.error(`${name} error:`, error.message);
+      });
+  });
+  console.log(`last updated: ${Date.now()}`);
+}
+
+displayPredictions();
+setInterval(displayPredictions, 60 * 1000);
+
 // Do some things
 // fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.redline)).then((json) => console.log('stopsbyroute - redline', json));
 // fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.bus)).then((json) => console.log('stopsbyroute - bus', json));
 // fetchJSON(ENDPOINTS.predictionsbystop(STOPS.alewife.stop_id)).then((json) => console.log('predictionsbystop - alewife', json));
 // fetchJSON(ENDPOINTS.predictionsbystop(STOPS.magoun.stop_id)).then((json) => console.log('predictionsbystop - magoun', json));
 // fetchJSON(ENDPOINTS.predictionsbystop(STOPS.gladstone.stop_id)).then((json) => console.log('predictionsbystop - gladstone', json));
-
-getPredictionsByStop(STOPS.alewife)
-  .then((data) => {
-    console.log(data);
-  })
-  .catch((error) => {
-    console.error('alewife error:', error.message);
-  });
-
-getPredictionsByStop(STOPS.magoun)
-  .then((data) => {
-    console.log(data);
-  })
-  .catch((error) => {
-    console.error('magoun error:', error.message);
-  });
-
-getPredictionsByStop(STOPS.gladstone)
-  .then((data) => {
-    console.log(data);
-  })
-  .catch((error) => {
-    console.error('gladstone error:', error.message);
-  });
