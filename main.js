@@ -56,12 +56,24 @@ async function getPredictionsByStop(stop) {
   return trips;
 }
 
+function normalizeTrips(trips) {
+  return trips.map((trip) => {
+    return {
+      prediction: new Date(parseInt(trip.pre_dt, 10) * 1000),
+      arrival: new Date(parseInt(trip.sch_arr_dt, 10) * 1000),
+      departure: new Date(parseInt(trip.sch_dep_dt, 10) * 1000),
+      headsign: trip.trip_headsign,
+      name: trip.trip_name
+    };
+  }).filter((trip) => trip.departure > Date.now());
+}
+
 function displayPredictionsList(selector, data) {
   const section = document.querySelector(selector);
-  const list = document.createElement('ul');
-  data.forEach((time) => {
+  const list = document.createElement('ol');
+  normalizeTrips(data).forEach((trip) => {
     const item = document.createElement('li');
-    item.appendChild(document.createTextNode(time.trip_name));
+    item.appendChild(document.createTextNode(`${trip.departure}`));
     list.appendChild(item);
   });
   section.innerHTML = '';
