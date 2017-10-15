@@ -1,5 +1,7 @@
-const API_KEY = 'zwnfedkyJ0m-ITfTerDfqg';
-const BASE_URL = 'http://realtime.mbta.com/developer/api/v2/';
+const MBTA_API_KEY = 'zwnfedkyJ0m-ITfTerDfqg';
+const WEATHER_API_KEY = 'ece87b5e9ca34587fa0b35ec23421a55';
+const MBTA_BASE_URL = 'https://realtime.mbta.com/developer/api/v2/';
+const WEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const FORMAT = 'json'
 
 const ROUTES = {
@@ -25,14 +27,23 @@ const STOPS = {
   },
 };
 
-const buildEndpoint = (endpoint, params) => {
+const PLACES = {
+  magoun: {
+    name: '53 Magoun Street',
+    lat: '42.399040',
+    lon: '-71.135409',
+  },
+};
+
+const buildMbtaEndpoint = (endpoint, params) => {
   const paramStr = params.reduce((prev, curr) => prev += `&${curr.name}=${curr.value}`, '');
-  return `${BASE_URL}${endpoint}?api_key=${API_KEY}&format=${FORMAT}${paramStr}`;
+  return `${MBTA_BASE_URL}${endpoint}?api_key=${MBTA_API_KEY}&format=${FORMAT}${paramStr}`;
 };
 
 const ENDPOINTS = {
-  stopsbyroute: (route) => buildEndpoint('stopsbyroute', [{ name: 'route', value: route }]),
-  predictionsbystop: (stop) => buildEndpoint('predictionsbystop', [{ name: 'stop', value: stop }]),
+  stopsbyroute: (route) => buildMbtaEndpoint('stopsbyroute', [{ name: 'route', value: route }]),
+  predictionsbystop: (stop) => buildMbtaEndpoint('predictionsbystop', [{ name: 'stop', value: stop }]),
+  forecast: (lat, lon) => `${WEATHER_BASE_URL}weather?appid=${WEATHER_API_KEY}&lat=${lat}&lon=${lon}&units=imperial`,
 };
 
 async function fetchJSON(url) {
@@ -95,12 +106,43 @@ function displayPredictions() {
   console.log(`last updated: ${Date.now()}`);
 }
 
-displayPredictions();
-setInterval(displayPredictions, 60 * 1000);
+async function getForecast(place) {
+  const {name, lat, lon} = place;
+  const json = await fetchJSON(ENDPOINTS.forecast(lat, lon));
+  return json;
+}
 
-// Do some things
-// fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.redline)).then((json) => console.log('stopsbyroute - redline', json));
-// fetchJSON(ENDPOINTS.stopsbyroute(ROUTES.bus)).then((json) => console.log('stopsbyroute - bus', json));
-// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.alewife.stop_id)).then((json) => console.log('predictionsbystop - alewife', json));
-// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.magoun.stop_id)).then((json) => console.log('predictionsbystop - magoun', json));
-// fetchJSON(ENDPOINTS.predictionsbystop(STOPS.gladstone.stop_id)).then((json) => console.log('predictionsbystop - gladstone', json));
+function displayForecast(selector, data) {
+  const {weather, main} = data;
+  const section = document.querySelector(selector);
+  const forecast = document.createElement('ul');
+  const tempItem = document.createElement('li');
+  tempItem.appendChild(document.createTextNode(main.temp));
+  forecast.appendChild(tempItem);
+  const weatherItem = document.createElement('li');
+  weatherItem.appendChild(document.createTextNode(weather[0].main));
+  forecast.appendChild(weatherItem);
+  section.innerHTML = '';
+  section.appendChild(forecast);
+}
+
+function displayForecasts() {
+  Object.keys(PLACES).forEach((name) => {
+    const place = PLACES[name];
+    getForecast(place)
+      .then((data) => {
+        console.log(data);
+        displayForecast(`#weather .forecast`, data);
+      })
+      .catch((error) => {
+        console.error(`${name} error:`, error.message);
+      })
+  });
+}
+
+displayPredictions();
+displayForecasts();
+setInterval(() => {
+  displayPredictions();
+  displayForecasts();
+}, 60 * 1000 * 5);
