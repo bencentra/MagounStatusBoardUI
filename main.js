@@ -35,6 +35,31 @@ const PLACES = {
   },
 };
 
+const DAYS = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
+};
+
+const MONTHS = {
+  0: 'January',
+  1: 'February',
+  2: 'March',
+  3: 'April',
+  4: 'May',
+  5: 'June',
+  6: 'July',
+  7: 'August',
+  8: 'September',
+  9: 'October',
+  10: 'November',
+  11: 'December',
+};
+
 const buildMbtaEndpoint = (endpoint, params) => {
   const paramStr = params.reduce((prev, curr) => prev += `&${curr.name}=${curr.value}`, '');
   return `${MBTA_BASE_URL}${endpoint}?api_key=${MBTA_API_KEY}&format=${FORMAT}${paramStr}`;
@@ -68,6 +93,7 @@ async function getPredictionsByStop(stop) {
 }
 
 function normalizeTrips(trips) {
+  const fiveMinutesInMillis = 1000 * 60 * 5;
   return trips.map((trip) => {
     return {
       prediction: new Date(parseInt(trip.pre_dt, 10) * 1000),
@@ -76,19 +102,34 @@ function normalizeTrips(trips) {
       headsign: trip.trip_headsign,
       name: trip.trip_name
     };
-  }).filter((trip) => trip.departure > Date.now());
+  }).filter((trip) => trip.departure > (Date.now() + fiveMinutesInMillis));
 }
 
 function displayPredictionsList(selector, data) {
   const section = document.querySelector(selector);
-  const list = document.createElement('ol');
-  normalizeTrips(data).forEach((trip) => {
-    const item = document.createElement('li');
-    item.appendChild(document.createTextNode(`${trip.departure}`));
-    list.appendChild(item);
-  });
   section.innerHTML = '';
-  section.appendChild(list);
+  const trips = normalizeTrips(data);
+  const firstTrip = trips.shift();
+  if (firstTrip) {
+    const nextTrain = document.createElement('div');
+    const minutesUntilNextTrain = minutesUntil(firstTrip.departure);
+    const nextTrainText = document.createTextNode(`Next Departure in ${minutesUntilNextTrain} minutes (${getTimeString(firstTrip.departure)})`);
+    nextTrain.appendChild(nextTrainText);
+    section.appendChild(nextTrain);
+  }
+  if (trips.length > 0) {
+    const msg = document.createElement('p');
+    msg.appendChild(document.createTextNode('Upcoming departures:'));
+    section.appendChild(msg);
+    const list = document.createElement('ul');
+    trips.forEach((trip) => {
+      const item = document.createElement('li');
+      const minutesUntilTrain = minutesUntil(trip.departure);
+      item.appendChild(document.createTextNode(`${minutesUntilTrain} minutes (${getTimeString(trip.departure)})`));
+      list.appendChild(item);
+    });
+    section.appendChild(list);
+  }
 }
 
 function displayPredictions() {
@@ -115,15 +156,8 @@ async function getForecast(place) {
 function displayForecast(selector, data) {
   const {weather, main} = data;
   const section = document.querySelector(selector);
-  const forecast = document.createElement('ul');
-  const tempItem = document.createElement('li');
-  tempItem.appendChild(document.createTextNode(main.temp));
-  forecast.appendChild(tempItem);
-  const weatherItem = document.createElement('li');
-  weatherItem.appendChild(document.createTextNode(weather[0].main));
-  forecast.appendChild(weatherItem);
-  section.innerHTML = '';
-  section.appendChild(forecast);
+  const str = `<strong>Weather:</strong> ${main.temp}℉, ${weather[0].main}`;
+  section.innerHTML = str;
 }
 
 function displayForecasts() {
@@ -132,14 +166,49 @@ function displayForecasts() {
     getForecast(place)
       .then((data) => {
         console.log(data);
-        displayForecast(`#weather .forecast`, data);
+        displayForecast(`.forecast`, data);
       })
       .catch((error) => {
         console.error(`${name} error:`, error.message);
-      })
+      });
   });
 }
 
+function displayDate(selector, date) {
+  if (!date) {
+    date = new Date();
+  }
+  const str = getDateString(date);
+  document.querySelector(selector).innerHTML = str;
+}
+
+function minutesUntil(date, date2) {
+  if (!date2) date2 = Date.now();
+  return parseInt((date - date2) / 1000 / 60, 10);
+}
+
+function getTimeString(date) {
+  let amPm = 'AM';
+  let hour = date.getHours();
+  if (hour > 12) {
+    hour -= 12;
+    amPm = 'PM'
+  }
+  if (hour === 0) hour = 12;
+  let minute = date.getMinutes();
+  if (minute < 10) minute = `0${minute}`;
+  return `${hour}:${minute} ${amPm}`;
+}
+
+function getDateString(date) {
+  const day = DAYS[date.getDay()];
+  const month = MONTHS[date.getMonth()];
+  const year = 1900 + date.getYear();
+  const num = date.getDate();
+  return `${day}, ${month} ${num}, ${year}`;
+}
+
+displayDate('.date');
 displayPredictions();
 displayForecasts();
 setInterval(() => {

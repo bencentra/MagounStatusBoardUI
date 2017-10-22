@@ -12,13 +12,44 @@ body, html {
 #wrapper {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: row;
+  padding: 10px;
+  /*display: flex;
+  flex-direction: row;*/
 }
 
-.card {
+.row {
+  clear: both;
+}
+
+.half {
+  width: 50%;
+  float: left;
+}
+
+.third {
+  width: 33%;
+  float: left;
+}
+
+.header {
+  margin: 0px;
+  text-align: center;
+}
+
+.forecast {
+  padding-top: 8px;
+  font-size: 1.2em;
+  text-align: right;
+}
+
+.date {
+  padding-top: 8px;
+  font-size: 1.2em;
+}
+
+/*.card {
   flex: auto;
   border: 1px solid #dddddd;
   border-radius: 12px;
   padding: 0px 6px;
-}
+}*/
