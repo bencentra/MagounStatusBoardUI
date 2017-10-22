@@ -13,12 +13,18 @@ body, html {
   width: 100%;
   height: 100%;
   padding: 10px;
-  /*display: flex;
-  flex-direction: row;*/
 }
 
 .row {
   clear: both;
+}
+
+.center {
+  text-align: center;
+}
+
+.whole {
+  width: 100%;
 }
 
 .half {
@@ -33,7 +39,10 @@ body, html {
 
 .header {
   margin: 0px;
-  text-align: center;
+}
+
+.refresh {
+  font-size: 1.2em;
 }
 
 .forecast {
@@ -46,10 +55,3 @@ body, html {
   padding-top: 8px;
   font-size: 1.2em;
 }
-
-/*.card {
-  flex: auto;
-  border: 1px solid #dddddd;
-  border-radius: 12px;
-  padding: 0px 6px;
-}*/

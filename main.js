@@ -6,6 +6,10 @@ const FORMAT = 'json'
 
 const ROUTES = {
   redline: 'Red',
+  // greenline: 'Green', // Actually 4 separate routes
+  orangeline: 'Orange',
+  blueline: 'Blue',
+  // silverline: 'Silver', // Actually 5 separate routes
   bus: '77',
 };
 
@@ -60,6 +64,8 @@ const MONTHS = {
   11: 'December',
 };
 
+const fiveMinutesInMillis = 1000 * 60 * 5;
+
 const buildMbtaEndpoint = (endpoint, params) => {
   const paramStr = params.reduce((prev, curr) => prev += `&${curr.name}=${curr.value}`, '');
   return `${MBTA_BASE_URL}${endpoint}?api_key=${MBTA_API_KEY}&format=${FORMAT}${paramStr}`;
@@ -68,6 +74,7 @@ const buildMbtaEndpoint = (endpoint, params) => {
 const ENDPOINTS = {
   stopsbyroute: (route) => buildMbtaEndpoint('stopsbyroute', [{ name: 'route', value: route }]),
   predictionsbystop: (stop) => buildMbtaEndpoint('predictionsbystop', [{ name: 'stop', value: stop }]),
+  alertsbyroute: (route) => buildMbtaEndpoint('alertsbyroute', [{name: 'route', value: route}]),
   forecast: (lat, lon) => `${WEATHER_BASE_URL}weather?appid=${WEATHER_API_KEY}&lat=${lat}&lon=${lon}&units=imperial`,
 };
 
@@ -93,7 +100,6 @@ async function getPredictionsByStop(stop) {
 }
 
 function normalizeTrips(trips) {
-  const fiveMinutesInMillis = 1000 * 60 * 5;
   return trips.map((trip) => {
     return {
       prediction: new Date(parseInt(trip.pre_dt, 10) * 1000),
@@ -144,7 +150,6 @@ function displayPredictions() {
         console.error(`${name} error:`, error.message);
       });
   });
-  console.log(`last updated: ${Date.now()}`);
 }
 
 async function getForecast(place) {
@@ -208,10 +213,34 @@ function getDateString(date) {
   return `${day}, ${month} ${num}, ${year}`;
 }
 
-displayDate('.date');
-displayPredictions();
-displayForecasts();
-setInterval(() => {
-  displayPredictions();
-  displayForecasts();
-}, 60 * 1000 * 5);
+document.addEventListener('DOMContentLoaded', () => {
+  function refresh() {
+    displayPredictions();
+    displayForecasts();
+    document.querySelector('.last-updated').innerHTML = `Last updated: ${getTimeString(new Date())}`;
+  }
+
+  function setRefreshInterval() {
+    return setInterval(refresh, fiveMinutesInMillis);
+  }
+
+  // Display initial data;
+  displayDate('.date');
+  refresh();
+
+  // Test for route alerts
+  // Object.keys(ROUTES).forEach((route) => {
+  //   fetchJSON(ENDPOINTS.alertsbyroute(ROUTES[route])).then(console.log).catch(console.error);
+  // });
+
+  // Refresh the data every five minutes
+  let interval = setRefreshInterval();
+
+  // Hook up the manual refresh button;
+  const refreshBtn = document.querySelector('.refresh');
+  refreshBtn.addEventListener('click', () => {
+    clearInterval(interval);
+    refresh();
+    interval = setRefreshInterval();
+  });
+});
