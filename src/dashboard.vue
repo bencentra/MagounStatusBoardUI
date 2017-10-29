@@ -5,27 +5,28 @@
     <div class="col third">
       <div class="date">{{date}}</div>
     </div>
-    <div class="col third">
+    <div class="col third center">
       <h1 class="header">53 Magoun Street</h1>
     </div>
     <div class="col third">
-      <div class="forecast">{{weather}}</div>
+      <Weather :data="weather"/>
     </div>
   </div>
   <div class="row">
     <div class="col third">
-      {{alewife}}
+      <Route :data="alewife" :name="'Red Line Inbound - Alewife'"/>
     </div>
     <div class="col third">
-      {{magoun}}
+      <Route :data="magoun" :name="'Bus 77 South - Magoun'"/>
     </div>
     <div class="col third">
-      {{gladstone}}
+      <Route :data="gladstone" :name="'Bus 77 North - Gladstone'"/>
     </div>
   </div>
   <div class="row">
     <div class="col whole center">
-      <button class="refresh" v-on:click="update()">Refresh</button>
+      <button class="refresh" v-on:click="refresh()">Refresh</button>
+      <div><em>Last updated: {{lastUpdated}}</em></div>
     </div>
   </div>
 </div>
@@ -35,6 +36,12 @@
 import * as mbta from './mbta';
 import * as weather from './weather';
 import * as dates from './dates';
+import Weather from './components/weather.vue';
+import Route from './components/route.vue';
+
+const fiveMinutesInMillis = 1000 * 60 * 5;
+
+let intervalId = null;
 
 export default {
   data() {
@@ -43,21 +50,34 @@ export default {
       alewife: [],
       magoun: [],
       gladstone: [],
-      weather: {},
+      weather: null,
+      lastUpdated: '',
     }
   },
   methods: {
     update() {
-      mbta.getPredictionsByStop(mbta.STOPS.alewife)
-        .then((data) => this.alewife = data);
-      mbta.getPredictionsByStop(mbta.STOPS.magoun)
-        .then((data) => this.magoun = data);
-      mbta.getPredictionsByStop(mbta.STOPS.gladstone)
-        .then((data) => this.gladstone = data);
-      weather.getForecast(weather.PLACES.magoun)
-        .then((data) => this.weather = data);
-    }
-  }
+      console.log('update');
+      mbta.getPredictionsByStop(mbta.STOPS.alewife).then((data) => this.alewife = data);
+      mbta.getPredictionsByStop(mbta.STOPS.magoun).then((data) => this.magoun = data);
+      mbta.getPredictionsByStop(mbta.STOPS.gladstone).then((data) => this.gladstone = data);
+      weather.getForecast(weather.PLACES.magoun).then((data) => this.weather = data);
+      this.lastUpdated = dates.getTimeString(new Date());
+    },
+    refresh() {
+      console.log('refresh');
+      clearInterval(intervalId);
+      this.update();
+      intervalId = setInterval(() => this.update(), fiveMinutesInMillis);
+    },
+  },
+  created: function() {
+    this.update();
+    intervalId = setInterval(() => this.update(), fiveMinutesInMillis);
+  },
+  components: {
+    Weather,
+    Route,
+  },
 }
 </script>
 
@@ -113,12 +133,6 @@ body, html {
 
 .refresh {
   font-size: 1.2em;
-}
-
-.forecast {
-  padding-top: 8px;
-  font-size: 1.2em;
-  text-align: right;
 }
 
 .date {

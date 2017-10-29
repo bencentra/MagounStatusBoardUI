@@ -11,7 +11,7 @@ __UI:__
 * More detailed weather
   * More prominent in UI
   * Forecast for day/week
-* Add a build step (so you can run it in not Chrome/Chromium)
-* Use a templating engine or something
+* Linting
+* Unit tests
 
 A backend service might be nice to 1) hide API keys and 2) aggregating/simplifying other API calls

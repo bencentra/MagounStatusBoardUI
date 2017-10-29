@@ -9,7 +9,7 @@ module.exports = {
     library: 'MagounStatusBoardUI',
     libraryTarget: 'umd',
   },
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   module: {
     rules: [
       {
@@ -24,6 +24,8 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin(),
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true
+    }),
   ],
 };
