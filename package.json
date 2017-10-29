@@ -21,10 +21,14 @@
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.1",
+    "css-loader": "^0.28.7",
     "http-server": "^0.10.0",
+    "vue-loader": "^13.3.0",
+    "vue-template-compiler": "^2.5.2",
     "webpack": "^3.8.1"
   },
   "dependencies": {
-    "babel-polyfill": "^6.26.0"
+    "babel-polyfill": "^6.26.0",
+    "vue": "^2.5.2"
   }
 }

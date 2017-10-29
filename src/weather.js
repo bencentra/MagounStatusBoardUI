@@ -16,7 +16,7 @@ const ENDPOINTS = {
 };
 
 async function getForecast(place) {
-  const {name, lat, lon} = place;
+  const {lat, lon} = place;
   const json = await fetchJSON(ENDPOINTS.forecast(lat, lon));
   return json;
 }
