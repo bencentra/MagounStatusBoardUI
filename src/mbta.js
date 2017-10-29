@@ -83,17 +83,8 @@ async function getPredictionsByStop(stop) {
   return normalizeTrips(trips);
 }
 
-async function getAllPredictions() {
-  const promises = [];
-  Object.keys(STOPS).forEach((stop) => {
-    promises.push(getPredictionsByStop(stop));
-  });
-  return Promise.all(promises);
-}
-
 export {
   ROUTES,
   STOPS,
   getPredictionsByStop,
-  getAllPredictions,
 };
